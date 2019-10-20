@@ -1,14 +1,15 @@
-from rasa_slack_connector import SlackInput
-from rasa_core.channels.channel import HttpInputChannel
+from rasa_core.channels import HttpInputChannel
 from rasa_core.agent import Agent
 from rasa_core.interpreter import RasaNLUInterpreter
+from rasa_slack_connector import SlackInput
+
 
 nlu_interpreter = RasaNLUInterpreter('./models/nlu/default/restaurantnlu')
 agent = Agent.load('./models/dialogue', interpreter = nlu_interpreter)
 
-input_channel = SlackInput('xoxp-462633319383-4617723817957-462990291990-0e9fe2873de8ea28051f3ecce978b08e', #app verification token
-							'xoxb-462633319383-46178426864231-4hPvkcIFZDtvZbqHlc082i3Y', # bot verification token
-							'8ajLnkhZaUxh6ATMJNl49v65avM', # slack verification token
+input_channel = SlackInput('xoxp-623102633093-625916629409-795261422928-66314fc52c7bff2ac25ce248931e2a84', #app verification token
+							'xoxb-623102633093-797468902166-9nm19txSzlu4ape3en98AtvV', # bot verification token
+							'KzsHtMlb1CypfIjMdpJRUz22', # slack verification token
 							True)
 
 agent.handle_channel(HttpInputChannel(5004, '/', input_channel))

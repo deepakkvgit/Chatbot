@@ -48,17 +48,11 @@ class ActionSearchRestaurants(Action):
 
 		for restaurant in allRestaurants:
 			++count
-			res = "[" + restaurant['restaurant']['user_rating']['aggregate_rating'] + "/5] " + restaurant['restaurant']['name'] + " in " + restaurant['restaurant']['location']['address']
+			res =  restaurant['restaurant']['name'] + " in " + restaurant['restaurant']['location']['address'] + " has been rated [" + restaurant['restaurant']['user_rating']['aggregate_rating'] + "/5] "
 
-			# price_range = str(restaurant['restaurant']['price_range'])
 			avg_c_2 = restaurant['restaurant']['average_cost_for_two']
 
-			# if price_range == "1":
-			
 			if avg_c_2 <= rangeMax and avg_c_2 >= rangeMin:
-				
-				# mapbybudget["1"].append(restaurant)
-				# if userbudget == price_range:
 				
 				res = restaurant['restaurant']['currency'] + str(restaurant['restaurant']['average_cost_for_two']) + " " + res + "\n"
 				if(index < 5):
@@ -70,7 +64,9 @@ class ActionSearchRestaurants(Action):
 
 		# modifying the search results
 		# if the no. of result fall short, appending the results of other price range
+		[SlotSet('search_result','found')]
 		if index == 0:
+			[SlotSet('search_result','zero')]
 			response = "Oops! no restaurant found for this query. " + " search results = " + str(count)
 		elif index < 5:
 			# we can add restaurants from the higher range but for now i am appending an extra message 
@@ -106,11 +102,12 @@ class ActionSearchRestaurants(Action):
 		d = json.loads(results)
 		response=""
 
-		if d['results_found'] == 0:
+		if (d.get('results_found', 0) == 0):
 			response= "Sorry, we didn't find any results for this query."
+			[SlotSet('search_result','zero')]
 		else:
-			# dispatcher.utter_message(str(d))
 			response = self.filterRestaurantBasedOnBudget(budget, d['restaurants'])
+			[SlotSet('search_result','found')]
 
 		dispatcher.utter_message(str(response))
 		return [SlotSet('location',loc)]
@@ -135,7 +132,6 @@ class ActionValidateLocation(Action):
 	def run(self, dispatcher, tracker, domain):
 		loc = tracker.get_slot('location')
 		city = str(loc)
-		# dispatcher.utter_message(city)
 
 		if city.lower() in t1_t2_cities_list:
 			return [SlotSet('location_match',"one")]
@@ -146,8 +142,6 @@ class ActionValidateLocation(Action):
 				results = zomato.get_city_ID(city)
 				return [SlotSet('location_match',"tier3")]
 			except:
-				# results = "Sorry, didn’t find any such location. Can you please tell again?" + "-----" + city
-				# dispatcher.utter_message(city)
 				return [SlotSet('location_match',"zero")]
 
 
@@ -157,6 +151,7 @@ class ActionSendEmail(Action):
 		return 'action_send_email'
 
 	def run(self, dispatcher, tracker, domain):
+
 		email = tracker.get_slot('email')
 		
 		# for slack handling
@@ -167,16 +162,22 @@ class ActionSendEmail(Action):
 		s = smtplib.SMTP('smtp.gmail.com', 587) 
 		s.starttls() 
 		s.login("deepakupgrad@gmail.com", "Upgrad2019#")
-		message = """\
-        Subject: Restaurant details
-        
-        The details of all the restaurants you inquried \n \n"""
+		message = "Details of all the restaurants you inquried \n \n"
 		global result_of_last_query
 		message = message + result_of_last_query
+
+		from email.message import EmailMessage
+		msg = EmailMessage()
+		msg['Subject'] = "FoodieBot - Restaurant search results"
+		msg['From'] = "FoodieBot"
+		msg['To'] =  str(email)
+		msg.set_content(message)
+		
 		try:
-			s.sendmail("deepakupgrad@gmail.com", str(email), message)
+			s.send_message(msg)
 			s.quit()
 		except:
+			print("error in sending email")
 			dispatcher.utter_message(email)
 
 		result_of_last_query = ""
