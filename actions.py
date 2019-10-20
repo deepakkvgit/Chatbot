@@ -7,7 +7,7 @@ from rasa_core.events import SlotSet
 import zomatopy
 import json
 
-zomato_config={ "user_key":"6ce88a5ec1419e335afa1c7f92f4b739"}
+zomato_config={ "user_key":""}
 result_of_last_query = ""
 
 class ActionSearchRestaurants(Action):
